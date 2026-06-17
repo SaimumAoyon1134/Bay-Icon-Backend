@@ -14,6 +14,7 @@ app.use(
       "http://127.0.0.1:5173",
       "https://thebayicon.com",
       "https://www.thebayicon.com",
+      "https://bayicon-1926f.web.app/",
     ],
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
@@ -29,7 +30,7 @@ let client;
 async function connectDB() {
   if (!uri) {
     throw new Error("MONGODB_URI is missing. Add it in Vercel Environment Variables.");
-  }
+  } 
 
   if (db) return db;
 
@@ -106,6 +107,6 @@ if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
-}
+}else{console.log(`Server running on ${process.env.VERCEL}`)};
 
 module.exports = app;

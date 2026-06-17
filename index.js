@@ -7,15 +7,23 @@ const app = express();
 const PORT = process.env.PORT || 5001;
 const uri = process.env.MONGODB_URI;
 
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://127.0.0.1:5173",
+  "https://thebayicon.com",
+  "https://www.thebayicon.com",
+  "https://bayicon-1926f.web.app",
+  "https://bayicon-1926f.firebaseapp.com",
+];
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:5173",
-      "http://127.0.0.1:5173",
-      "https://thebayicon.com",
-      "https://www.thebayicon.com",
-      "https://bayicon-1926f.web.app/",
-    ],
+    origin: function (origin, callback) {
+      if (!origin || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS"));
+    },
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
     optionsSuccessStatus: 204,
@@ -107,6 +115,6 @@ if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);
   });
-}else{console.log(`Server running on ${process.env.VERCEL}`)};
+}
 
 module.exports = app;

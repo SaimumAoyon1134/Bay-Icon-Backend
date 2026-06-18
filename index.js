@@ -24,7 +24,7 @@ app.use(
       }
       return callback(new Error("Not allowed by CORS"));
     },
-    methods: ["GET", "POST", "OPTIONS"],
+    methods: ["GET", "POST", "OPTIONS", "DELETE"],
     allowedHeaders: ["Content-Type"],
     optionsSuccessStatus: 204,
   })
@@ -110,7 +110,43 @@ app.post("/api/leads", async (req, res) => {
     });
   }
 });
+app.delete("/api/leads/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
 
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid lead ID",
+      });
+    }
+
+    const database = await connectDB();
+    const leadCollection = database.collection("leads");
+
+    const result = await leadCollection.deleteOne({
+      _id: new ObjectId(id),
+    });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Lead not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Lead deleted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+});
 if (!process.env.VERCEL) {
   app.listen(PORT, () => {
     console.log(`Server running on http://localhost:${PORT}`);

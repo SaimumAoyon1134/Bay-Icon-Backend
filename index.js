@@ -92,7 +92,7 @@ app.post("/api/leads", async (req, res) => {
     const result = await leadCollection.insertOne({
       name,
       mobile,
-      address,
+      email,
       preferredLocation,
       createdAt: new Date(),
     });

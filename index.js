@@ -77,9 +77,9 @@ app.get("/api/leads", async (req, res) => {
 
 app.post("/api/leads", async (req, res) => {
   try {
-    const { name, mobile, address, preferredLocation } = req.body;
+    const { name, mobile, email, preferredLocation } = req.body;
 
-    if (!name || !mobile || !address || !Array.isArray(preferredLocation) || preferredLocation.length === 0) {
+    if (!name || !mobile || !email || !Array.isArray(preferredLocation) || preferredLocation.length === 0) {
       return res.status(400).json({
         success: false,
         message: "All fields are required",

@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 const app = express();
@@ -113,7 +113,6 @@ app.post("/api/leads", async (req, res) => {
 app.delete("/api/leads/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    console.log(id);
 
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({

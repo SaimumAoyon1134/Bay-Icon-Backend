@@ -113,6 +113,7 @@ app.post("/api/leads", async (req, res) => {
 app.delete("/api/leads/:id", async (req, res) => {
   try {
     const { id } = req.params;
+    console.log(id);
 
     if (!ObjectId.isValid(id)) {
       return res.status(400).json({

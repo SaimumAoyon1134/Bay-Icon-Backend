@@ -24,7 +24,7 @@ app.use(
       }
       return callback(new Error("Not allowed by CORS"));
     },
-    methods: ["GET", "POST", "OPTIONS", "DELETE"],
+    methods: ["GET", "POST", "PUT", "OPTIONS", "DELETE"],
     allowedHeaders: ["Content-Type"],
     optionsSuccessStatus: 204,
   })
@@ -94,6 +94,7 @@ app.post("/api/leads", async (req, res) => {
       mobile,
       email,
       preferredLocation,
+      status: "New",
       createdAt: new Date(),
     });
 
@@ -110,6 +111,55 @@ app.post("/api/leads", async (req, res) => {
     });
   }
 });
+
+app.put("/api/leads/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+    const allowedStatuses = ["New", "Decision Pending", "Confirmed", "Declined"];
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid lead ID",
+      });
+    }
+
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid status",
+      });
+    }
+
+    const database = await connectDB();
+    const leadCollection = database.collection("leads");
+
+    const result = await leadCollection.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status, updatedAt: new Date() } }
+    );
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Lead not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Lead status updated successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+});
+
 app.delete("/api/leads/:id", async (req, res) => {
   try {
     const { id } = req.params;

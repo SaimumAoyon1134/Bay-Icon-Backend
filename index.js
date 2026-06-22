@@ -214,7 +214,7 @@ app.post("/api/careers", upload.single("resume"), async (req, res) => {
   try {
     const { name, mobile, gmail,role, experienceYear, coverLetter } = req.body;
 
-    if (!name || !mobile || !gmail ||role|| !experienceYear || !coverLetter || !req.file) {
+    if (!name || !mobile || !gmail ||!role|| !experienceYear || !coverLetter || !req.file) {
       return res.status(400).json({
         success: false,
         message: "All fields including resume PDF are required",

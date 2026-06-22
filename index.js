@@ -212,9 +212,9 @@ app.delete("/api/leads/:id", async (req, res) => {
 });
 app.post("/api/careers", upload.single("resume"), async (req, res) => {
   try {
-    const { name, mobile, gmail, experienceYear, coverLetter } = req.body;
+    const { name, mobile, gmail,role, experienceYear, coverLetter } = req.body;
 
-    if (!name || !mobile || !gmail || !experienceYear || !coverLetter || !req.file) {
+    if (!name || !mobile || !gmail ||role|| !experienceYear || !coverLetter || !req.file) {
       return res.status(400).json({
         success: false,
         message: "All fields including resume PDF are required",
@@ -228,6 +228,7 @@ app.post("/api/careers", upload.single("resume"), async (req, res) => {
       name,
       mobile,
       gmail,
+      role,
       experienceYear,
       coverLetter,
       resume: {

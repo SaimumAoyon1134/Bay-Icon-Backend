@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const multer = require("multer");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
@@ -31,6 +32,18 @@ app.use(
 );
 
 app.use(express.json());
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype !== "application/pdf") {
+      return cb(new Error("Only PDF resume is allowed"));
+    }
+    cb(null, true);
+  },
+});
 
 let db;
 let client;
@@ -189,6 +202,110 @@ app.delete("/api/leads/:id", async (req, res) => {
       success: true,
       message: "Lead deleted successfully",
     });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+});
+app.post("/api/careers", upload.single("resume"), async (req, res) => {
+  try {
+    const { name, mobile, gmail, experienceYear, coverLetter } = req.body;
+
+    if (!name || !mobile || !gmail || !experienceYear || !coverLetter || !req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "All fields including resume PDF are required",
+      });
+    }
+
+    const database = await connectDB();
+    const careerCollection = database.collection("careers");
+
+    const result = await careerCollection.insertOne({
+      name,
+      mobile,
+      gmail,
+      experienceYear,
+      coverLetter,
+      resume: {
+        originalName: req.file.originalname,
+        mimeType: req.file.mimetype,
+        size: req.file.size,
+        buffer: req.file.buffer,
+      },
+      status: "New",
+      createdAt: new Date(),
+    });
+
+    res.status(201).json({
+      success: true,
+      insertedId: result.insertedId,
+      message: "Career application submitted successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+});
+app.get("/api/careers", async (req, res) => {
+  try {
+    const database = await connectDB();
+    const careerCollection = database.collection("careers");
+
+    const careers = await careerCollection
+      .find({}, { projection: { "resume.buffer": 0 } })
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.status(200).json({
+      success: true,
+      data: careers,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Internal Server Error",
+    });
+  }
+});
+app.get("/api/careers/:id/resume", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid career application ID",
+      });
+    }
+
+    const database = await connectDB();
+    const careerCollection = database.collection("careers");
+
+    const application = await careerCollection.findOne({
+      _id: new ObjectId(id),
+    });
+
+    if (!application || !application.resume) {
+      return res.status(404).json({
+        success: false,
+        message: "Resume not found",
+      });
+    }
+
+    res.set({
+      "Content-Type": application.resume.mimeType,
+      "Content-Disposition": `attachment; filename="${application.resume.originalName}"`,
+    });
+
+    res.send(application.resume.buffer.buffer);
   } catch (error) {
     console.error(error);
     res.status(500).json({
